@@ -30,7 +30,9 @@ int left_strictly (point2d a, point2d b, point2d c);
 /* return 1 if c is left of ab or on ab; 0 otherwise */
 int left_on(point2d a, point2d b, point2d c); 
 
+double compute_radial_angle(const point2d& p, const point2d& c); 
 
+vector<point2d> radial_sort(const vector<point2d>& points, const point2d& c);
 
 // compute the convex hull 
 void graham_scan(vector<point2d>& pts, vector<point2d>& hull);

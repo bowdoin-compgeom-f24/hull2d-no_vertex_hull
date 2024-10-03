@@ -1,13 +1,10 @@
 PLATFORM = $(shell uname)
 
-
 ## Compilation flags
-##comment out one or the other 
-##debugging 
-CFLAGS = -g 
-##release
-#CFLAGS = -O3 -DNDEBUG
-LDFLAGS=
+## Debugging 
+CFLAGS = -g -std=c++11
+## Release
+#CFLAGS = -O3 -DNDEBUG -std=c++11
 
 CFLAGS+= -Wall
 
@@ -21,12 +18,10 @@ else
 CFLAGS += -m64
 INCLUDEPATH  = -I/usr/include/GL/ 
 LIBPATH = -L/usr/lib64 -L/usr/X11R6/lib
-LDFLAGS+=  -lGL -lglut -lrt -lGLU -lX11 -lm  -lXmu -lXext -lXi
+LDFLAGS+=  -lGL -lglut -lrt -lGLU -lX11 -lm  -lXmu -lXext -lXil
 endif
 
-
 CC = g++ -O3 -Wall $(INCLUDEPATH)
-
 
 PROGS = hull2d
 
@@ -36,18 +31,14 @@ hull2d: viewhull.o geom.o rtimer.o
 	$(CC) -o $@ viewhull.o geom.o rtimer.o $(LDFLAGS)
 
 viewhull.o: viewhull.cpp  geom.h rtimer.h
-	$(CC) -c $(CFLAGS)   viewhull.cpp  -o $@
+	$(CC) -c $(CFLAGS) viewhull.cpp -o $@
 
 geom.o: geom.cpp geom.h 
-	$(CC) -c $(CFLAGS)  geom.cpp -o $@
+	$(CC) -c $(CFLAGS) geom.cpp -o $@
 
 rtimer.o: rtimer.h rtimer.c
-	$(CC) -c $(CFLAGS)  rtimer.c -o $@
-
-
+	$(CC) -c $(CFLAGS) rtimer.c -o $@
 
 clean:
 	rm *.o
 	rm viewPoints
-
-

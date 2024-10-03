@@ -83,7 +83,7 @@ const int WINDOWSIZE = 500;
    user can cycle through them by pressing 'i'. Check out the display()
    function.
 */
-int NB_INIT_CHOICES = 4; 
+int NB_INIT_CHOICES = 11; 
 int  POINT_INIT_MODE = 0; //the first inititalizer
 
 
@@ -116,13 +116,31 @@ void initialize_points_circle(vector<point2d>& pts, int n);
 void initialize_points_horizontal_line(vector<point2d>&pts, int n);
 void initialize_points_random(vector<point2d>&pts, int n) ;
 void initialize_points_cross(vector<point2d>&pts, int n) ;
+void initialize_points_quatrefoil(vector<point2d>& pts, int n, int scale); 
+void initialize_points_trefoil(vector<point2d>& pts, int n, int scale);
+void initialize_points_hexagon(vector<point2d>& pts, int n); 
+bool is_point_on_polygon(const point2d& p, const vector<point2d>& polygon);
+void initialize_points_wave(vector<point2d>& pts, int n); 
+void initialize_points_ellipse(vector<point2d> &pts, int n); 
+void initialize_points_crescent(vector<point2d> &pts, int n);
+void initialize_points_heart(vector<point2d>& pts, int n); 
 
-//you'll add more 
-
-
-/********************************************************************/
-
-
+/* initializes n points in the shape of a heart * used equation from Wolfram MathWorld */ 
+void initialize_points_heart(vector<point2d>& pts, int n) { 
+  printf("\ninitialize points heart\n"); pts.clear(); 
+  // clear it out for safety 
+  double t = (2*M_PI) / n; 
+  // defining step size this way will give us n points 
+  point2d p; 
+  int SCALING_FACTOR = 100; 
+  // ensures that the heart is a good size 
+  for (double a = 0; a<2*M_PI; a+=t) {
+    p.x = WINDOWSIZE/2 + SCALING_FACTOR*(sqrt(2) * sin(a)*sin(a)*sin(a))+ (random() % ((int)(.07*WINDOWSIZE))); 
+    p.y = WINDOWSIZE/2 + SCALING_FACTOR*(-cos(a)*cos(a)*cos(a) - cos(a)*cos(a) + 2*cos(a)) + (random() % ((int)(.07*WINDOWSIZE))); 
+    pts.push_back(p);
+  } 
+  printf("heart inititalied with %lu points\n", pts.size()); 
+}
 
 
 
@@ -136,6 +154,7 @@ void initialize_points_circle(vector<point2d>& pts, int n) {
   printf("\ninitialize points circle\n"); 
   //clear the vector just to be safe 
   pts.clear(); 
+  pts.reserve(n);
 
   n = n/2; //we'll generaate two circles, n/2 points each
   double  step = 2* M_PI/n; 
@@ -157,9 +176,156 @@ void initialize_points_circle(vector<point2d>& pts, int n) {
   
 }
 
+void initialize_points_crescent(vector<point2d> &pts, int n)
+{
+  printf("\ninitialize points crescent\n");
+  pts.clear();
+  int n_outer = n / 2;
+  int n_inner = n - n_outer;
+  double centerX = WINDOWSIZE / 2;
+  double centerY = WINDOWSIZE / 2;
+  double radius_outer = WINDOWSIZE / 3;
+  double radius_inner = WINDOWSIZE / 4;
+  double angle_start = M_PI / 6;
+  double angle_end = 11 * M_PI / 6;
+  double angle_step_outer = (angle_end - angle_start) / n_outer;
+  double angle_step_inner = (angle_end - angle_start) / n_inner;
+  // Generate outer arc
+  for (int i = 0; i < n_outer; ++i)
+  {
+    point2d p;
+    double angle = angle_start + i * angle_step_outer;
+    p.x = centerX + radius_outer * cos(angle);
+    p.y = centerY + radius_outer * sin(angle);
+    pts.push_back(p);
+  }
+  // Generate inner arc in reverse order
+  for (int i = n_inner - 1; i >= 0; --i)
+  {
+    point2d p;
+    double angle = angle_start + i * angle_step_inner;
+    p.x = centerX + radius_inner * cos(angle);
+    p.y = centerY + radius_inner * sin(angle);
+    pts.push_back(p);
+  }
+}
+
+void initialize_points_ellipse(vector<point2d> &pts, int n)
+{
+  printf("\ninitialize points ellipse\n");
+  pts.clear();
+  double centerX = WINDOWSIZE / 2;
+  double centerY = WINDOWSIZE / 2;
+  double radiusX = WINDOWSIZE / 3;
+  double radiusY = WINDOWSIZE / 4;
+  double angle_step = 2 * M_PI / n;
+  for (int i = 0; i < n; ++i)
+  {
+    point2d p;
+    double angle = i * angle_step;
+    p.x = centerX + radiusX * cos(angle);
+    p.y = centerY + radiusY * sin(angle);
+    pts.push_back(p);
+  }
+}
+
+// Helper function to check if a point is inside a convex polygon
+bool is_point_on_polygon(const point2d& p, const vector<point2d>& polygon) {
+    int n = polygon.size();
+    double angle = 0;
+    for (int i = 0; i < n; i++) {
+        point2d p1 = {polygon[i].x - p.x, polygon[i].y - p.y};
+        point2d p2 = {polygon[(i + 1) % n].x - p.x, polygon[(i + 1) % n].y - p.y};
+        double cross = p1.x * p2.y - p2.x * p1.y;
+        double dot = p1.x * p2.x + p1.y * p2.y;
+        angle += atan2(cross, dot);
+    }
+    return fabs(fabs(angle) - 2 * M_PI) < 1e-6;  // Check if the angle is approximately 2π
+}
+
+// Function to initialize points in a hexagon
+void initialize_points_hexagon(vector<point2d>& pts, int n) {
+    pts.clear();
+    // Define the center of the hexagon
+    double centerX = WINDOWSIZE / 2.0;
+    double centerY = WINDOWSIZE / 2.0;
+    // Set the radius of the hexagon (distance from center to any vertex)
+    double radius = WINDOWSIZE / 4.0;
+    // Number of sides for the hexagon
+    int numSides = 6;
+    // Angle between each vertex
+    double angleStep = 2 * M_PI / numSides;
+    // Add hexagon vertices
+    vector<point2d> hexagonVertices;
+    for (int i = 0; i < numSides; ++i) {
+        point2d p;
+        p.x = centerX + radius * cos(i * angleStep);
+        p.y = centerY + radius * sin(i * angleStep);
+        pts.push_back(p);  // Store the hexagon vertices in the pts list
+        hexagonVertices.push_back(p);  // Store the hexagon vertices separately for point-in-polygon check
+    }
+    // Add random points inside the hexagon boundary
+    int generatedPoints = 0;
+    while (generatedPoints < n) {
+        point2d p;
+        // Generate a random point within a bounding box around the hexagon
+        p.x = centerX + (((double)rand() / RAND_MAX) * 2 - 1) * radius;
+        p.y = centerY + (((double)rand() / RAND_MAX) * 2 - 1) * radius;
+        if (is_point_on_polygon(p, hexagonVertices)) {
+            pts.push_back(p);
+            generatedPoints++;
+        }
+    }
+    printf("Hexagon: initialized with %lu points\n", pts.size());
+}
 
 
+void initialize_points_quatrefoil(vector<point2d>& pts, int n, int scale = 100) {
 
+  printf("\ninitialize points quatrefoil\n"); 
+  pts.clear(); 
+
+  pts.reserve(n);
+
+  // Ensure n is positive
+  if (n <= 0) return;
+
+  pts.reserve(n);
+
+  int center_x = WINDOWSIZE / 2;
+  int center_y = WINDOWSIZE / 2;
+
+  // Scaling factors
+  double a = scale; 
+  double b = scale / 2.0;
+
+  // parametric equations for a quatrefoil.
+  for(int i = 0; i < n; ++i){
+    // Calculate the current angle
+    double theta = (2.0 * 3.141592653 * i) / n;
+
+    // Quatrefoil parametric equations
+    double r = std::cos(2.0 * theta);
+
+    // Convert polar to Cartesian coordinates
+    double x_float = r * std::cos(theta);
+    double y_float = r * std::sin(theta);
+
+    // Scale the coordinates
+    x_float *= a;
+    y_float *= b;
+
+    // Translate to center
+    int x = static_cast<int>(std::round(x_float)) + center_x;
+    int y = static_cast<int>(std::round(y_float)) + center_y;
+
+    // Ensure the points are within the window bounds
+    x = std::max(0, std::min(x, WINDOWSIZE));
+    y = std::max(0, std::min(y, WINDOWSIZE));
+
+    pts.push_back(point2d{ x, y });
+  }
+}
 
 /* ****************************** */
 /* Initializes pts with n points on a line.  The points are in the
@@ -170,6 +336,7 @@ void initialize_points_horizontal_line(vector<point2d>& pts, int n) {
   printf("\ninitialize points line\n"); 
   //clear the vector just to be safe 
   pts.clear(); 
+  pts.reserve(n);
   
   point2d p; 
   for (int i=0; i<n; i++) {
@@ -178,8 +345,6 @@ void initialize_points_horizontal_line(vector<point2d>& pts, int n) {
     pts.push_back(p); 
   }
 }
-
-
 
 
 /* ****************************** */
@@ -200,8 +365,62 @@ void initialize_points_random(vector<point2d>& pts, int n) {
   }
 }
 
+// Function to initialize points in a wave shape based on the sine function
+void initialize_points_wave(vector<point2d>& pts, int n){
+printf("\ninitialize points wave\n");
+  //clear the vector just to be safe
+  pts.clear();
+  double step = (double)WINDOWSIZE / n;
+  double amplitude = 100;  // Height of the wave
+  double frequency = 0.1;  // Controls the number of waves
+  point2d p;
+  for (int i = 0; i < n; ++i) {
+    p.x = i * step;
+    p.y = WINDOWSIZE / 2 + amplitude * sin(frequency * p.x);
+    pts.push_back(p);
+  }
+}
 
+void initialize_points_trefoil(vector<point2d>& pts, int n, int scale = 100) {
 
+    printf("\ninitialize points trefoil\n");
+    // Clear existing points
+    pts.clear();
+
+    // Ensure n is positive
+    if (n <= 0) return;
+    pts.reserve(n);
+
+    int center_x = WINDOWSIZE / 2;
+    int center_y = WINDOWSIZE / 2;
+
+    double a = scale;        
+    double b = scale;      
+
+    for (int i = 0; i < n; ++i) {
+        double theta = (2.0 * M_PI * i) / n;
+        // Trefoil parametric equations
+        double r = cos(3.0 * theta);
+
+        // Convert polar coordinates to Cartesian coordinates
+        double x_float = r * cos(theta);
+        double y_float = r * sin(theta);
+
+        // Scale the coordinates
+        x_float *= a;
+        y_float *= b;
+
+        // Translate to center
+        int x = static_cast<int>(round(x_float)) + center_x;
+        int y = static_cast<int>(round(y_float)) + center_y;
+
+        // Ensure the points are within the window bounds
+        x = max(0, min(x, WINDOWSIZE));
+        y = max(0, min(y, WINDOWSIZE));
+
+        pts.push_back(point2d{ x, y });
+    }
+}
 
 /* ****************************** */
 /* Initializes pts with n points on a cross-like shape.  The points are
@@ -230,12 +449,8 @@ void initialize_points_cross(vector<point2d>& pts, int n) {
    
     pts.push_back(p); 
     
-  }//for i
-
+  }
 }
-
-
-
 
 /* ****************************** */
 /* print the vector of points */
@@ -247,9 +462,6 @@ void print_vector(const char* label, vector<point2d> points) {
   }
   printf("\n");
 }
-
-
-
 
 
 /* ****************************** */
@@ -426,7 +638,28 @@ void keypress(unsigned char key, int x, int y) {
     case 3: 
       initialize_points_random(points, NPOINTS); 
       break; 
-    } //switch 
+    case 4: 
+      initialize_points_quatrefoil(points, NPOINTS); 
+      break; 
+    case 5: 
+      initialize_points_trefoil(points, NPOINTS); 
+      break; 
+    case 6:
+      initialize_points_hexagon(points, NPOINTS);
+      break;
+    case 7:
+      initialize_points_wave(points, NPOINTS);
+      break;
+    case 8:
+      initialize_points_ellipse(points, NPOINTS); 
+      break; 
+    case 9:
+      initialize_points_crescent(points, NPOINTS); 
+      break;
+    case 10:
+      initialize_points_heart(points, NPOINTS); 
+      break;
+    }//switch 
     //we changed the points, so we need to recompute the hull
     graham_scan(points, hull); 
 
